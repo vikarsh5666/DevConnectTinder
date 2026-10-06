@@ -1,0 +1,20 @@
+{
+  "name": "devconnecttinder",
+  "version": "1.0.0",
+  "description": "To Connect new Dev and makes connections",
+  "main": "index.js",
+  "scripts": {
+    "start": "node src/app.js",
+    "dev": "nodemon src/app.js"
+  },
+  "keywords": [
+    "nodejs",
+    "reactjs",
+    "javascript"
+  ],
+  "author": "Vikarsh Verma",
+  "license": "ISC",
+  "dependencies": {
+    "express": "^5.2.1"
+  }
+}
