@@ -1,4 +1,7 @@
 const mongoose = require("mongoose");
+const validator = require('validator');
+const jwt = require("jsonwebtoken");
+const bcrypt = require('bcrypt');
 const { Schema } = mongoose;
 
 const userSchema = new Schema({
@@ -17,14 +20,12 @@ const userSchema = new Schema({
         type: String,
         required: true,
         trim: true,
-        uniquue: true,
+        unique: true,
         lowercase: true,
         validate(value) {
-            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-
-            if (!emailRegex.test(value)) {
-                throw new Error('Email ID is not valid');
-            }
+            if(!validator.isEmail(value)){
+                throw new Error('Invalid Email: ' + value)
+            };
         }
     },
     age: {
@@ -34,6 +35,11 @@ const userSchema = new Schema({
     password: {
         type: String,
         required: true,
+        validate(value) {
+            if(!validator.isStrongPassword(value)){
+                throw new Error('Password must be Strong: ' + value)
+            };
+        }
     },
     gender: {
         type: String,
@@ -52,11 +58,28 @@ const userSchema = new Schema({
     },
     photoUrl: {
         type: String,
-        default: 'https://www.citypng.com/public/uploads/preview/profile-user-round-black-icon-symbol-hd-png-701751695033512ycgy0udtoj.png'
+        default: 'https://www.citypng.com/public/uploads/preview/profile-user-round-black-icon-symbol-hd-png-701751695033512ycgy0udtoj.png',
+        validate(value) {
+            if(!validator.isURL(value)){
+                throw new Error('Invalid Photo URl: '+ value)
+            };
+        }
     }
 },
 {
     timestamps: true,
-})
+});
 
+userSchema.methods.getJWT = async function() {
+    const user = this;
+    const token =  await jwt.sign({ _id: user._id }, "Dev@ConnectTinder", { expiresIn: "7d" });
+    return token;
+};
+
+userSchema.methods.validatePassword = async function(passwordInputByUser) {
+    const user  = this;
+    const passwordHash = user.password;
+    const isValidPassword = await bcrypt.compare(passwordInputByUser, passwordHash)
+    return isValidPassword;
+}
 module.exports = mongoose.model('User', userSchema);
