@@ -40,7 +40,7 @@ authRouter.post('/login', async (req, res) => {
             const jwtToken = await user.getJWT();
 
             res.cookie("token", jwtToken, { expires: new Date(Date.now() + 8 * 3600000) });
-            res.send('Login succesfull!!');
+            res.send(user);
         }
         else {
             throw new Error('Password Is not correct');
