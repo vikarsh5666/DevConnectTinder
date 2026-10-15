@@ -16,8 +16,12 @@ authRouter.post('/signup', async (req, res) => {
         const userObj = new User({
             firstName, lastName, emailId, password: passwordHash, gender
         });
-        await userObj.save();
-        res.send("user created sucessfully!!");
+        const savedUser = await userObj.save();
+
+        const jwtToken = await savedUser.getJWT();
+
+        res.cookie("token", jwtToken, { expires: new Date(Date.now() + 8 * 3600000) });
+        res.json({message: "user created sucessfully!!" , data:savedUser});
     }
     catch (err) {
         res.status(400).send("Some technical issue while saving user, please connect contact support: " + err.message);
@@ -54,9 +58,10 @@ authRouter.post('/login', async (req, res) => {
 });
 
 authRouter.post('/logout', async (req, res) => {
-    res
-    .cookie("token", null, {expires: new Date(new Date())})
-    .send("Logout Successfuly!!");
+    res.cookie("token", null, {
+        expires: new Date(Date.now()),
+      });
+      res.send("Logout Successful!!");
 });
 
 module.exports = authRouter;
