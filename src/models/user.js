@@ -71,7 +71,15 @@ const userSchema = new Schema({
                 throw new Error('Invalid Photo URl: ' + value)
             };
         }
-    }
+    },
+    isOnline: {
+        type: Boolean,
+        default: false,
+    },
+    lastSeen: {
+        type: Date,
+        default: null,
+    },
 },
     {
         timestamps: true,

@@ -3,6 +3,7 @@ const connectDB = require("./config/database");
 const app = express();
 const cookieParser = require("cookie-parser");
 const cors = require("cors");
+const http = require("http")
 require('dotenv').config();
 
 app.use(cors({
@@ -17,55 +18,23 @@ const profileRouter = require("./routes/profile");
 const requestRouter = require("./routes/request");
 const userRouter  = require("./routes/user");
 const paymentRouter = require("./routes/payment");
+const initializeSocket = require("./utils/socket");
+const chatRouter = require("./routes/chat");
 
 app.use("/", authRouter);
 app.use("/", profileRouter);
 app.use("/", requestRouter);
 app.use("/", userRouter);
 app.use("/", paymentRouter);
+app.use("/", chatRouter);
 
-// app.get('/user', async (req, res) => {
-//     const userEmail = req.body.emailId;
-//     try {
-//         const user = await User.findOne({ emailId: userEmail });
-//         if (user.length === 0) res.status(404).send("user not found");
-//         else {
-//             res.send(user);
-//         }
-//     }
-//     catch (err) {
-//         res.status(400).send("something went wrong");
-//     }
-// })
+const server = http.createServer(app);
+initializeSocket(server);
 
-// app.get('/feed', async (req, res) => {
-//     try {
-//         const user = await User.find({});
-//         res.send(user);
-//     }
-//     catch (err) {
-//         res.status(400).send("something went wrong");
-//     }
-// })
-
-// app.delete('/user', async (req, res) => {
-//     const userId = req.body.userId;
-//     try {
-//         const user = await User.findByIdAndDelete(userId);
-//         if (!user) {
-//             res.status(404).send("user not found");
-//         } else {
-//             res.send("user deleted!!");
-//         }
-//     }
-//     catch (err) {
-//         res.status(400).send("something went wrong");
-//     }
-// })
 
 connectDB().then(() => {
     console.log("Database connection established");
-    app.listen(process.env.PORT, () => {
+    server.listen(process.env.PORT, () => {
         console.log("Server succesfully run on Port 3000");
     });
 })
