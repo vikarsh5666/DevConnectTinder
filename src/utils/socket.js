@@ -56,15 +56,63 @@ const initializeSocket = (server) => {
                     chat.messages.push({
                         senderId: userId,
                         text,
+                        seen: false,
                     });
 
                     await chat.save();
-                    io.to(roomId).emit("messageReceived", { firstName, lastName, text });
+
+                    const savedMessage = chat.messages[chat.messages.length - 1];
+
+                    io.to(roomId).emit("messageReceived", {
+                        _id: savedMessage._id.toString(),
+                        senderId: userId.toString(),
+                        firstName,
+                        lastName,
+                        text,
+                        seen: false,
+                    });
                 } catch (err) {
                     console.log(err);
                 }
             }
         );
+
+        socket.on("markMessagesSeen", async ({ userId, targetUserId }) => {
+            try {
+                const roomId = getSecretRoomId(userId, targetUserId);
+        
+                const chat = await Chat.findOne({
+                    participants: { $all: [userId, targetUserId] },
+                });
+        
+                if (!chat) return;
+        
+                const unseenMessages = chat.messages.filter(
+                    (message) =>
+                        message.senderId.toString() === targetUserId &&
+                        !message.seen
+                );
+        
+                if (unseenMessages.length === 0) return;
+        
+                unseenMessages.forEach((message) => {
+                    message.seen = true;
+                });
+        
+                await chat.save();
+        
+                const messageIds = unseenMessages.map((message) =>
+                    message._id.toString()
+                );
+        
+                io.to(roomId).emit("messagesSeen", {
+                    messageIds,
+                    seenBy: userId,
+                });
+            } catch (err) {
+                console.error("Error marking messages as seen:", err);
+            }
+        });
 
         socket.on("disconnect", async () => {
             const userId = socket.data.userId;
