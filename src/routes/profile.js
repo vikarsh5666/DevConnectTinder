@@ -1,6 +1,8 @@
 const express = require("express");
-const { userAuth } = require("../middleware/auth");
+const { userAuth } = require("../middlewares/auth");
 const {validateAllowedFields} = require("../utils/validation");
+const upload = require("../middlewares/upload");
+const { uploadProfilePhoto } = require("../controllers/profileController");
 const user = require("../models/user");
 
 const profileRouter = express.Router();
@@ -33,5 +35,12 @@ profileRouter.patch('/profile/edit', userAuth, async (req, res) => {
         res.status(400).send("ERROR: " + err.message);
     }
 })
+
+profileRouter.post(
+    "/profile/photo",
+    userAuth,
+    upload.single("profilePhoto"),
+    uploadProfilePhoto
+);
 
 module.exports = profileRouter;

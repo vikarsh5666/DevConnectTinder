@@ -72,6 +72,18 @@ const userSchema = new Schema({
             };
         }
     },
+    
+    profilePhoto: {
+        url: {
+            type: String,
+            default: "",
+        },
+        publicId: {
+            type: String,
+            default: "",
+        },
+    },
+
     isOnline: {
         type: Boolean,
         default: false,
