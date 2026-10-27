@@ -6,10 +6,22 @@ const cors = require("cors");
 const http = require("http")
 require('dotenv').config();
 
+const allowedOrigins = [
+    "http://localhost:5173",
+    "https://production.d3utqfez9h0isv.amplifyapp.com",
+];
+
 app.use(cors({
-    origin: 'http://localhost:5173',
+    origin: function (origin, callback) {
+        if (!origin || allowedOrigins.includes(origin)) {
+            callback(null, true);
+        } else {
+            callback(new Error("Not allowed by CORS"));
+        }
+    },
     credentials: true
 }));
+
 app.use(express.json());
 app.use(cookieParser());
 
