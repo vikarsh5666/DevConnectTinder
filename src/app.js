@@ -9,6 +9,7 @@ require('dotenv').config();
 const allowedOrigins = [
     "http://localhost:5173",
     "https://production.d3utqfez9h0isv.amplifyapp.com",
+    "https://devconnecttinder.duckdns.org",
 ];
 
 app.use(cors({
@@ -28,7 +29,7 @@ app.use(cookieParser());
 const authRouter = require("./routes/auth");
 const profileRouter = require("./routes/profile");
 const requestRouter = require("./routes/request");
-const userRouter  = require("./routes/user");
+const userRouter = require("./routes/user");
 const paymentRouter = require("./routes/payment");
 const initializeSocket = require("./utils/socket");
 const chatRouter = require("./routes/chat");
