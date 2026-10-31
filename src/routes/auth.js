@@ -109,7 +109,6 @@ authRouter.post('/google', async (req, res) => {
             family_name,
             picture
         } = payload;
-        console.log(payload, '--payload');
         let isNewUser = false;
         let user = await User.findOne({
             emailId: email.toLowerCase()
@@ -130,7 +129,7 @@ authRouter.post('/google', async (req, res) => {
 
             // Update Google profile photo
             if (picture) {
-                user.photoUrl = picture;
+                user.photoUrl = user.photoUrl || picture;
             }
 
         } else {
