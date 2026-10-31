@@ -1,10 +1,15 @@
 const express = require("express");
 const User = require("../models/user");
 const bcrypt = require('bcrypt');
+const { OAuth2Client } = require('google-auth-library');
 const validator = require('validator');
 const { validateSignUpData } = require('../utils/validation');
 
 const authRouter = express.Router();
+
+const googleClient = new OAuth2Client(
+    process.env.GOOGLE_CLIENT_ID
+);
 
 authRouter.post('/signup', async (req, res) => {
     const { firstName, lastName, emailId, password, gender } = req.body;
@@ -71,6 +76,96 @@ authRouter.post('/logout', async (req, res) => {
         expires: new Date(Date.now()),
     });
     res.send("Logout Successful!!");
+});
+
+authRouter.post('/google', async (req, res) => {
+    try {
+        const { credential } = req.body;
+
+        if (!credential) {
+            return res.status(400).json({
+                message: 'Google credential is required'
+            });
+        }
+
+        // Verify the Google ID token
+        const ticket = await googleClient.verifyIdToken({
+            idToken: credential,
+            audience: process.env.GOOGLE_CLIENT_ID
+        });
+
+        const payload = ticket.getPayload();
+
+        if (!payload || !payload.email || !payload.email_verified) {
+            return res.status(401).json({
+                message: 'Google account email is not verified'
+            });
+        }
+
+        const {
+            sub: googleId,
+            email,
+            given_name,
+            family_name,
+            picture
+        } = payload;
+        console.log(payload, '--payload');
+        let isNewUser = false;
+        let user = await User.findOne({
+            emailId: email.toLowerCase()
+        });
+
+        if (user) {
+            // Link the verified Google account to the existing user
+            if (user.googleId && user.googleId !== googleId) {
+                return res.status(409).json({
+                    message: 'This email is linked to another Google account'
+                });
+            }
+
+            if (!user.googleId) {
+                user.googleId = googleId;
+                await user.save();
+            }
+
+            // Update Google profile photo
+            if (picture) {
+                user.photoUrl = picture;
+            }
+
+        } else {
+            isNewUser = true;
+            user = await User.create({
+                firstName: given_name || 'Google User',
+                lastName: family_name || undefined,
+                emailId: email.toLowerCase(),
+                googleId,
+                photoUrl: picture
+            });
+        }
+
+        const jwtToken = await user.getJWT();
+
+        res.cookie('token', jwtToken, {
+            expires: new Date(Date.now() + 8 * 3600000),
+            httpOnly: true,
+            secure: true,
+            sameSite: 'none'
+        });
+
+        return res.json({
+            message: 'Google login successful',
+            data: user,
+            isNewUser
+        });
+
+    } catch (err) {
+        console.error('Google login error:', err.message);
+
+        return res.status(401).json({
+            message: 'Google login failed'
+        });
+    }
 });
 
 module.exports = authRouter;

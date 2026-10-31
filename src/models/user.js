@@ -8,12 +8,12 @@ const userSchema = new Schema({
     firstName: {
         type: String,
         required: true,
-        minLength: 4,
+        minLength: 1,
         maxLength: 50
     },
     lastName: {
         type: String,
-        minLength: 4,
+        minLength: 1,
         maxLength: 50
     },
     emailId: {
@@ -34,7 +34,9 @@ const userSchema = new Schema({
     },
     password: {
         type: String,
-        required: true,
+        required: function () {
+            return !this.googleId;
+        },
         validate(value) {
             if (!validator.isStrongPassword(value)) {
                 throw new Error('Password must be Strong: ' + value)
@@ -91,6 +93,11 @@ const userSchema = new Schema({
     lastSeen: {
         type: Date,
         default: null,
+    },
+    googleId: {
+        type: String,
+        unique: true,
+        sparse: true,
     },
 },
     {
